@@ -34,7 +34,7 @@ namespace WebSR.Server
         //    await Clients.All.SendAsync("ReceiveMessage", user, message);
         //}
 
-        public Task SendMaterieelvirtueel(MaterieelVirtueel train)
+        public Task SendMaterieelvirtueel(Train train)
         {            
             return Clients.All.SendAsync("ReceiveTrain", train);
         }

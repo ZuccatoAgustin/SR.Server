@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -26,31 +27,65 @@ namespace WebSR.Server.Controllers
 
         // GET api/values
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<string>>> Get(int count = 2, string area = "A")
+        public async Task<ActionResult<IEnumerable<string>>> Get(int count = 1 )
         {
-            var r = Areas.GetAreas().Single(e => e.Nombre == area).Nombre;
+
+            var id = 0;
+            //var tasks = new List<Task>();
+
+
+            //for (int i = 0; i < 70; i++)
+            //{
+            //    tasks.Add(SendTrain(id++)); 
+
+            //}
+
+
+            //await Task.WhenAll(tasks);
 
             for (int i = 0; i < count; i++)
             {
-                var a = new SR.core.MaterieelVirtueel();
-                a.id = new Random().Next(0, int.MaxValue);
-                a.spoortak = new Random().Next(0, int.MaxValue);
-                a.lintnaam = (new Random().Next(0, int.MaxValue)).ToString();
-                a.kmwaarde = new Random().Next(0, int.MaxValue);
-                a.spoor = new Random().Next(0, 5);
-                a.meters = new Random().Next(0, 5);
-                a.nummer = new Random().Next(0, 5).ToString();
-                a.emplacement_id = new Random().Next(0, 5);
-                //  HubContext.Clients.All.SendMaterieelvirtueel(a);
+                Thread thread1 = new Thread(SendTrain);
+                thread1.Start();
+                Thread.Sleep(1000);
 
-               // await HubContext.Clients.All.SendAsync("ReceiveMessage", "paso", DateTime.Now.ToShortDateString());
-
-                // await HubContext.Clients.Group(r).SendAsync("ReceiveTrain", a);
-                await HubContext.Clients.Group(r).SendAsync("ReceiveTrain", a);
-                
             }
 
-            return new string[] { count.ToString() };
-        } 
+          
+
+
+
+
+            return new string[] { "ok" };
+        }
+
+        public void  SendTrain()
+        { 
+            var r = Area.GetRamdom();
+            var  numero = new Random().Next(0, int.MaxValue).ToString();
+            while (true)
+            {
+
+                var a = new SR.core.Train();
+                a.id = new Guid();
+                a.Field1 = new Random().Next(0, int.MaxValue);
+                a.Field2 = (new Random().Next(0, int.MaxValue)).ToString();
+                a.Field3 = new Random().Next(0, int.MaxValue);
+                a.Field4 = new Random().Next(0, 5);
+                a.Field5 = new Random().Next(0, 5);
+                a.Number = numero;
+                a.area_id = r.Id;
+                //  HubContext.Clients.All.SendMaterieelvirtueel(a);
+                // await HubContext.Clients.All.SendAsync("ReceiveMessage", "paso", DateTime.Now.ToShortDateString());
+                // await HubContext.Clients.Group(r).SendAsync("ReceiveTrain", a);
+
+
+                Thread.Sleep(10 * 1000);
+                Task.Run(async () =>
+                {
+                    await HubContext.Clients.Group(r.Nombre).SendAsync("ReceiveTrain", a);
+                });
+            }
+        }
     }
 }

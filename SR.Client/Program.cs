@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SR.core;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SR.Client
@@ -11,10 +13,19 @@ namespace SR.Client
         static void Main(string[] args)
         {
 
+
+
+
+            List<string> areas = new List<string>();
+
+            Console.WriteLine("area random , o escriba A,B,C :");
+
+            var s = Console.ReadLine();
+
             connection = new HubConnectionBuilder()
-              .WithUrl("http://localhost:60427/trainhub")
-              .Build();
-  
+  .WithUrl("http://localhost:60427/trainhub")
+  .Build();
+
             connection.Closed += async (error) =>
             {
                 await Task.Delay(new Random().Next(0, 5) * 1000);
@@ -24,12 +35,33 @@ namespace SR.Client
             registerHubHandlers();
 
 
-            Task.Run(async ()   => 
+            if (!string.IsNullOrEmpty(s))
+            {
+                areas = s.Split(",").ToList();
+            }
+            else
+            {
+                areas = Area.GetAreas().Select(e => e.Nombre).ToList();
+            }
+
+            Task.Run(async () =>
             {
                 try
                 {
                     await connection.StartAsync();
-                    await connection.SendAsync("JoinRoom", "A");
+
+                    if (areas.Any())
+                    {
+                        areas.ForEach(async f =>
+                        {
+                            await connection.SendAsync("JoinRoom", f);
+                        });
+                    }
+                    else
+                    {
+                        await connection.SendAsync("JoinRoom", Area.GetRamdom().Nombre);
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -43,11 +75,11 @@ namespace SR.Client
 
         }
 
-        
 
 
 
-        private static void registerHubHandlers ()
+
+        private static void registerHubHandlers()
         {
 
             connection.On<string, string>("ReceiveMessage", (user, message) =>
@@ -55,9 +87,10 @@ namespace SR.Client
                 var newMessage = $"{user}: {message}";
                 Console.WriteLine(newMessage);
             });
-            connection.On<MaterieelVirtueel>("ReceiveTrain", (train) =>
+            connection.On<Train>("ReceiveTrain", (train) =>
             {
-                var newMessage = $"id: {train.id}: area :{train.emplacement_id }";
+                Console.ForegroundColor = Area.GetArea(train.area_id).Color;
+                var newMessage = $"id: {train.id}: area :{train.area_id } numero: {train.Number }";
                 Console.WriteLine(newMessage);
             });
 
