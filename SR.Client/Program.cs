@@ -12,19 +12,43 @@ namespace SR.Client
         static HubConnection connection;
         static void Main(string[] args)
         {
-
-
-
-
             List<string> areas = new List<string>();
+            if (args != null && args.Any())
+            {
+                areas = args.ToList();
 
-            Console.WriteLine("area random , o escriba A,B,C :");
+                areas.ForEach(e =>
+                {
+                    Console.WriteLine(e);
+                }
 
-            var s = Console.ReadLine();
+                    );
+                
+
+            }
+            else {
+
+                Console.WriteLine("area random , o escriba A,B,C :");
+
+                var s = Console.ReadLine();
+
+
+                if (!string.IsNullOrEmpty(s))
+                {
+                    areas = s.Split(",").ToList();
+                }
+                else
+                {
+                    areas = Area.GetAreas().Select(e => e.Nombre).ToList();
+                }
+            }
+             
+
+           
 
             connection = new HubConnectionBuilder()
-  .WithUrl("http://localhost:60427/trainhub")
-  .Build();
+.WithUrl("http://localhost:60427/trainhub")
+.Build();
 
             connection.Closed += async (error) =>
             {
@@ -33,16 +57,6 @@ namespace SR.Client
             };
 
             registerHubHandlers();
-
-
-            if (!string.IsNullOrEmpty(s))
-            {
-                areas = s.Split(",").ToList();
-            }
-            else
-            {
-                areas = Area.GetAreas().Select(e => e.Nombre).ToList();
-            }
 
             Task.Run(async () =>
             {
